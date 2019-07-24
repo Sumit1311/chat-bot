@@ -6,18 +6,18 @@ var io = require('socket.io')();
 let Customer = require('./lib/Customer.js');
 let Agent = require('./lib/Agent.js');
 
-var agent = null;
+var customer = null;
 io.on('connection', (socket)  => {
     "use strict";
     console.log("Client Connected ",socket.id);
 
     socket.on("agent login", () => {
-        agent = new Agent(socket);
+        let agent = new Agent(socket);
+        agent.attend(customer);
     });
     socket.on("customer login", () => {
-        let customer = new Customer(socket);
-        customer.registerEventHandlers();
-        customer.join(agent)
+        customer = new Customer(socket);
+        //customer.registerEventHandlers();
     });
     /*socket.on('chat message', function (data) {
         console.log(data);
