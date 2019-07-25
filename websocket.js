@@ -29,6 +29,7 @@ io.on('connection', (socket)  => {
                 customers.removeCustomer(customer);
             }
         });
+        
         //agent.attend();
     });
 

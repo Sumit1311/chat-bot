@@ -31,6 +31,11 @@ $(
             $('#messages').append($('<li>').addClass('server-message').text(msg));
             window.scrollTo(0, document.body.scrollHeight);
         });
+        socket.on('customer-message', function (msg) {
+            console.log("Got customer message");
+            $('#messages').append($('<li>').addClass('customer-message').text(msg));
+            window.scrollTo(0, document.body.scrollHeight);
+        });
         socket.on('customer-list', function (clients) {
             $("#customer-list").append("<tbody></tbody>");
             for (var i in clients) {
