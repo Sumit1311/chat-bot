@@ -32,7 +32,6 @@ $(
             window.scrollTo(0, document.body.scrollHeight);
         });
         socket.on('customer-message', function (msg) {
-            console.log("Got customer message");
             $('#messages').append($('<li>').addClass('customer-message').text(msg));
             window.scrollTo(0, document.body.scrollHeight);
         });

@@ -24,5 +24,8 @@ $(
             $('#messages').append($('<li>').addClass('agent-message').text(msg));
             window.scrollTo(0, document.body.scrollHeight);
         });
+        socket.on('leave-chat', function() {
+            socket.disconnect(true);
+        });
     }
 )
