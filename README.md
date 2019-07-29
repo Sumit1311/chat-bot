@@ -8,7 +8,7 @@ This is e-commerce chat application which can be used by Support Agents to conne
 1. Run `npm start`
 
 # Agent Interface
-This can be visited from http://<hostname>:3000/agent
+This can be visited from http://hostname:3000/agent
 
 # Customer Interface
-This can be visited from http://<hostname>:3000/
+This can be visited from http://hostname:3000/
