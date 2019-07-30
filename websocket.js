@@ -73,10 +73,10 @@ io.on('connection', (socket)  => {
             } else {
                 customer.isDisconnected = false;
                 customer.setSocket(socket);
+                customer.sendChatHistory();
                 customer.sendMessage("You have rejoined the queue");
                 customer.sendMessage("Your waiting queue number is "+customers.getWaitCount(customer));
             }
-
         } else {
             customer = getNewCustomer(socket);
         }
@@ -110,6 +110,7 @@ function getNewCustomer(socket){
         customers.addCustomer(customer);
         socket.handshake.session.userData = customer.id;
         socket.handshake.session.save();
+        //customer.sendChatHistory();
         //console.log("Session data after saving",socket.handshake.session);
         customer.sendMessage("Your waiting queue number is "+customers.getWaitCount(customer));
         return customer;
