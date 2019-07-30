@@ -8,12 +8,13 @@ var app = require('../app');
 var websocket = require('../websocket');
 var debug = require('debug')('chat-bot:server');
 var http = require('http');
-
+//var sharedsession = require("express-socket.io-session");
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
+//app.use(session);
 app.set('port', port);
 
 /**

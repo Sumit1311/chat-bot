@@ -5,16 +5,27 @@ $(
     function(){
         "use strict";
         var socket = io();
-        var room = null;
+        var id = null;
+
         socket.on('connect', () => {
-            socket.emit('customer login');
+            socket.emit('customer-login', id);
         });
 
-        $('form').submit(function(){
-            socket.emit('message', $('#m').val());
-            $('#messages').append($('<li>').addClass('client-message').text($('#m').val()));
-            $('#m').val('');
+        $('#send-message').submit(function(){
+            if($('#m').val() == "::leavechat"){
+                socket.emit('customer-logout');
+                $('#messages').append($('<li>').addClass('client-message').text($('#m').val()));
+                $('#m').val('');
+            } else {
+                socket.emit('message', $('#m').val());
+                $('#messages').append($('<li>').addClass('client-message').text($('#m').val()));
+                $('#m').val('');
+            }
             return false;
+        });
+        $('#get-name').submit(function() {
+            id = $("#input-name").val();
+
         });
         socket.on('message', function(msg){
             $('#messages').append($('<li>').addClass('server-message').text(msg));
@@ -25,6 +36,7 @@ $(
             window.scrollTo(0, document.body.scrollHeight);
         });
         socket.on('leave-chat', function() {
+            socket.emit("customer-logout");
             socket.disconnect(true);
         });
     }

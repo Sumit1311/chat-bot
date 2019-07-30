@@ -17,7 +17,7 @@ $(
         "use strict";
         var socket = io();
         socket.on('connect', () => {
-            socket.emit('agent login');
+            socket.emit('agent-login');
             $("#customer-list").empty();
         });
         $('form').submit(function () {
