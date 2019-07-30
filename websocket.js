@@ -13,21 +13,32 @@ var disconnected = new CustomerQueue();
 var session = require('./lib/SessionStorage.js');
 var sharedsession = require("express-socket.io-session");
 
-customers.registerAddCustomer((client) => {
-    io.to('agent-room').emit('add-customer', client);
+customers.registerAddCustomer((customer) => {
+    //console.log("Calling add customer",client.id);
+    io.to('agent-room').emit('add-customer', customer.id);
+    //customers.removeAfterTimeout(customer, 100000);
 });
-customers.registerRemoveCustomer((client) => {
-    io.to('agent-room').emit('remove-customer', client);
+customers.registerRemoveCustomer((customer) => {
+    //console.log("Calling remove customer",client.id);
+    io.to('agent-room').emit('remove-customer', customer.id);
 });
+disconnected.registerRemoveCustomer((customer) => {
+    disconnected.clearRemoveTimer();
+    if(customer.hasJoined() && customer.isDisconnected){
+        io.to(customer.room).emit("message", "Customer "+ customer.id+" has left the chat");
+        customer.leave();
+    }
+});
+disconnected.registerAddCustomer((customer) => {
+    disconnected.removeAfter(customer, 10000);
+})
 io.use(sharedsession(session, {
-    autoSave : true
+    
 }));
 //var customer = null;
 io.on('connection', (socket)  => {
     "use strict";
-    //console.log("Client Connected ",socket.id);
     socket.on("agent-login", () => {
-        //let agent = new Agent(socket, findCustomer);
         let agent = new Agent(socket);
         agent.sendCustomerList(customers.getList());
         agent.onJoinCustomer((client) => {
@@ -38,85 +49,58 @@ io.on('connection', (socket)  => {
                 customers.removeCustomer(customer);
             }
         });
-        
-        //agent.attend();
     });
-
-    socket.on("customer-login", (userName) => {
-        let customer;
-        console.log("Session data ",socket.handshake.session);
+    socket.on("customer-login", () => {
+        let customer; 
+        //console.log("Session data ",socket.handshake.session);
         if(socket.handshake.session.userData){
             customer = customers.getCustomerById(socket.handshake.session.userData);
             if(customer == null){
                 //Get and remove customer from wait queue
                 customer = disconnected.getCustomerById(socket.handshake.session.userData);
-                //console.log(disconnected.getList());
+                console.log(disconnected.getList());
                 //console.log("Got from disconnected queue",customer);
                 if(customer != null) {
+                    customer.isDisconnected = false;
                     customer.setSocket(socket);
                     customer.rejoin();
+                    customer.sendMessage("You have rejoined the chat");
+                    disconnected.removeCustomer(customer);
                 } else {
-                    customer = new Customer(socket, uuidv1());
-                    customers.addCustomer(customer);
-                    socket.handshake.session.userData = customer.id;
-                    socket.handshake.session.save();
-                    customer.onDisconnect(() => {
-                        //customers.removeCustomer(customer);
-                        if(customer.hasJoined()){
-                            //Add customer to waiting queue if customer has joined a room
-                            disconnected.addCustomer(customer);
-                        }
-
-                    });
+                    customer = getNewCustomer(socket);
                 }
             } else {
+                customer.isDisconnected = false;
                 customer.setSocket(socket);
+                customer.sendMessage("You have rejoined the queue");
+                customer.sendMessage("Your waiting queue number is "+customers.getWaitCount(customer));
             }
 
         } else {
-            customer = new Customer(socket, uuidv1());
-            customers.addCustomer(customer);
-            socket.handshake.session.userData = customer.id;
-            socket.handshake.session.save();
-            console.log("Session data after saving",socket.handshake.session);
-            customer.onDisconnect(() => {
-                //customers.removeCustomer(customer);
-                console.log("Calling disconnect");
-                if(customer.hasJoined()){
-                    console.log("Adding to disconnected queue");
-                    //Add customer to waiting queue if customer has joined a room
-                    //console.log(disconnected.getList());
-                    disconnected.addCustomer(customer);
-                    //console.log(disconnected.getList());
-                }
-
-            });
+            customer = getNewCustomer(socket);
         }
-        customer.sendMessage("Your waiting queue number is "+customers.getWaitCount(customer));
-        /*customer.onDisconnect(() => {
-            customers.removeCustomer(customer);
-        });*/
-        //customer.registerEventHandlers();
+        customer.onDisconnect(() => {
+            if(customer.hasJoined()){
+                io.to(customer.room).emit("message", "Customer has disconnected. May reconnect soon. Please wait....");
+                disconnected.addCustomer(customer);
+            }
+        });
     });
 
     socket.on("customer-logout", () => {
-        //let customer;
+        let customer;
         if (socket.handshake.session.userData) {
-            //customer = customers.getCustomerById(socket.handshake.session.userData);
-            //customer.leave();
-            //customers.removeCustomer(customer);
+            //console.log("Customer logging out");
+            customer = customers.getCustomerById(socket.handshake.session.userData);
+            if(customer != null){
+                customer.leave();
+                customers.removeCustomer(customer);
+            } 
             delete socket.handshake.session.userData;
-            //customer = null;
+            customer = null;
             socket.handshake.session.save();
         }
     });
-    /*socket.on('chat message', function (data) {
-        console.log(data);
-        socket.emit('chat message', "This is server");
-    });
-    socket.on('disconnect', () => {
-        console.log("Client disconnected", socket.id);
-    })*/
 });
 
 function findCustomer(){
@@ -127,6 +111,16 @@ function findCustomer(){
         let customer = customers.getNextCustomer();
         return customer;
     }
+}
+
+function getNewCustomer(socket){
+        let customer = new Customer(socket, uuidv1());
+        customers.addCustomer(customer);
+        socket.handshake.session.userData = customer.id;
+        socket.handshake.session.save();
+        //console.log("Session data after saving",socket.handshake.session);
+        customer.sendMessage("Your waiting queue number is "+customers.getWaitCount(customer));
+        return customer;
 }
 
 module.exports = io;

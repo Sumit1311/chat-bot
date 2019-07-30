@@ -44,15 +44,15 @@ $(
                 }
             }
         });
-        socket.on('add-customer', function (client) {
-                if($("#" + client.id).length == 0) {
-                    $("#customer-list > tbody").append("<tr id='" + client.id + "'><td><a>" + client.id + "</a></td></tr>");
-                    $("#" + client.id).click(onClickHandler);
+        socket.on('add-customer', function (id) {
+                if($("#" + id).length == 0) {
+                    $("#customer-list > tbody").append("<tr id='" + id + "'><td><a>" + id + "</a></td></tr>");
+                    $("#" + id).click(onClickHandler);
                 }
         });
-        socket.on('remove-customer', function (client) {
+        socket.on('remove-customer', function (id) {
             //console.log("got remove customer", client);
-            $("#" + client.id).remove();
+            $("#" + id).remove();
         });
     }
 )

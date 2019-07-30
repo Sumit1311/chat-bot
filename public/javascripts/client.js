@@ -5,15 +5,16 @@ $(
     function(){
         "use strict";
         var socket = io();
-        var id = null;
 
         socket.on('connect', () => {
-            socket.emit('customer-login', id);
+            socket.emit('customer-login');
         });
 
         $('#send-message').submit(function(){
             if($('#m').val() == "::leavechat"){
-                socket.emit('customer-logout');
+                //This is development only
+                socket.emit("customer-logout");
+                socket.disconnect(true);
                 $('#messages').append($('<li>').addClass('client-message').text($('#m').val()));
                 $('#m').val('');
             } else {
@@ -35,9 +36,13 @@ $(
             $('#messages').append($('<li>').addClass('agent-message').text(msg));
             window.scrollTo(0, document.body.scrollHeight);
         });
+        //This is development only
         socket.on('leave-chat', function() {
             socket.emit("customer-logout");
             socket.disconnect(true);
         });
+        /*socket.on("disconnect", function(){
+            socket.emit("customer-logout");
+        })*/
     }
 )
