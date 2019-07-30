@@ -63,6 +63,7 @@ io.on('connection', (socket)  => {
                 if(customer != null) {
                     customer.isDisconnected = false;
                     customer.setSocket(socket);
+                    customer.sendChatHistory();
                     customer.rejoin();
                     customer.sendMessage("You have rejoined the chat");
                     disconnected.removeCustomer(customer);
@@ -85,6 +86,7 @@ io.on('connection', (socket)  => {
                 disconnected.addCustomer(customer);
             }
         });
+        customer.onAddChatHistory(customer.addToHistory.bind(customer));
     });
 
     socket.on("customer-logout", () => {
@@ -102,16 +104,6 @@ io.on('connection', (socket)  => {
         }
     });
 });
-
-function findCustomer(){
-    "use strict";
-    if(customers.isEmpty()){
-        return null;
-    } else {
-        let customer = customers.getNextCustomer();
-        return customer;
-    }
-}
 
 function getNewCustomer(socket){
         let customer = new Customer(socket, uuidv1());
