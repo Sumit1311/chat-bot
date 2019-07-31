@@ -25,7 +25,6 @@ customers.registerRemoveCustomer((customer) => {
 disconnected.registerRemoveCustomer((customer) => {
     disconnected.clearRemoveTimer();
     if(customer.hasJoined() && customer.isDisconnected){
-        io.to(customer.room).emit("message", "Customer "+ customer.id+" has left the chat");
         customer.leave();
     }
 });
